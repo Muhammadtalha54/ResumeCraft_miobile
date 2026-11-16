@@ -16,7 +16,7 @@ class ApiEndpoints {
       }
     }
 
-    return 'http://192.168.100.43:5000/api';
+    return 'https://resumecraft-backend-tffi.onrender.com/api';
   }
 
   // Auth

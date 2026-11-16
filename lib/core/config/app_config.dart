@@ -17,7 +17,7 @@ class AppConfig {
         try {
           dotenv.loadFromString(
             envString:
-                'API_BASE_URL=http://192.168.100.43:5000/api\nSTRIPE_PUBLISHABLE_KEY=pk_test_51TVTXbIsIPShicSX3INxjHx2sdYmINlyIximLmE09NdxHliA2nRpFMgihBdbGPUZRoXta0fpSKUfBg7d23oooXZu00C7We1Gv8',
+                'API_BASE_URL=https://resumecraft-backend-tffi.onrender.com/api\nSTRIPE_PUBLISHABLE_KEY=pk_test_51TVTXbIsIPShicSX3INxjHx2sdYmINlyIximLmE09NdxHliA2nRpFMgihBdbGPUZRoXta0fpSKUfBg7d23oooXZu00C7We1Gv8',
           );
         } catch (_) {}
       }
