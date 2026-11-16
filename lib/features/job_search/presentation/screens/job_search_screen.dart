@@ -234,7 +234,7 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
 
             // Content List View
             Expanded(
-              child: state.isLoading
+              child: state.isLoading && state.jobs.isEmpty
                   ? const LoadingWidget(message: Lang.searchingJobs)
                   : state.errorMessage != null
                       ? ErrorStateWidget(
@@ -249,17 +249,19 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
                               actionText: 'Retry Search',
                               onAction: _triggerSearch,
                             )
-                          : ListView.separated(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.screenWidth * 0.05,
-                                vertical: context.screenHeight * 0.02,
-                              ),
-                              itemCount: state.jobs.length,
-                              separatorBuilder: (_, index) => SizedBox(height: context.screenHeight * 0.015),
-                              itemBuilder: (context, index) {
-                                final job = state.jobs[index];
+                          : Stack(
+                              children: [
+                                ListView.separated(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: context.screenWidth * 0.05,
+                                    vertical: context.screenHeight * 0.02,
+                                  ),
+                                  itemCount: state.jobs.length,
+                                  separatorBuilder: (_, index) => SizedBox(height: context.screenHeight * 0.015),
+                                  itemBuilder: (context, index) {
+                                    final job = state.jobs[index];
 
-                                return Container(
+                                    return Container(
                                   padding: EdgeInsets.all(context.screenWidth * 0.04),
                                   decoration: BoxDecoration(
                                     color: AppColors.surface,
@@ -359,6 +361,18 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
                                 );
                               },
                             ),
+                            if (state.isLoading)
+                              const Positioned(
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                child: LinearProgressIndicator(
+                                  color: AppColors.primary,
+                                  backgroundColor: AppColors.primaryLight,
+                                ),
+                              ),
+                          ],
+                        ),
             ),
           ],
         ),
