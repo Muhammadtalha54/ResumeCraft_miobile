@@ -9,6 +9,7 @@ void main() async {
 
   // Load environment variables (.env)
   await AppConfig.init();
+  debugPrint('🚀 [ResumeCraft Mobile] Live Backend URL: ${AppConfig.apiBaseUrl}');
 
   // Configure transparent status bar with dark icons
   SystemChrome.setSystemUIOverlayStyle(
