@@ -28,6 +28,7 @@ class ApiClient {
   }
 
   Dio get rawDio => _dio;
+  AuthStorage get authStorage => _authStorage;
 
   Future<dynamic> get(
     String path, {

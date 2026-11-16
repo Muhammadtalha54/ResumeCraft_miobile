@@ -97,26 +97,44 @@ class ResumeRepositoryImpl implements ResumeRepository {
 
   @override
   Future<List<int>> exportResumePdfBytes(String resumeIdOrExportPath) async {
-    String resolvedPath;
+    String finalUrl;
+
     if (resumeIdOrExportPath.startsWith('http://') || resumeIdOrExportPath.startsWith('https://')) {
-      resolvedPath = resumeIdOrExportPath;
-    } else if (resumeIdOrExportPath.startsWith('/api/')) {
-      resolvedPath = resumeIdOrExportPath.substring(4); // Dio baseUrl already includes /api
-    } else if (resumeIdOrExportPath.startsWith('/')) {
-      resolvedPath = resumeIdOrExportPath;
+      finalUrl = resumeIdOrExportPath;
     } else {
-      resolvedPath = ApiEndpoints.resumeExport(resumeIdOrExportPath);
+      String id = resumeIdOrExportPath;
+      if (id.contains('/export/')) {
+        id = id.split('/export/').last;
+      } else if (id.startsWith('/')) {
+        id = id.split('/').last;
+      }
+      id = id.split('?').first.replaceAll(RegExp(r'\.pdf$', caseSensitive: false), '').trim();
+
+      final cleanBase = ApiEndpoints.baseUrl.endsWith('/')
+          ? ApiEndpoints.baseUrl.substring(0, ApiEndpoints.baseUrl.length - 1)
+          : ApiEndpoints.baseUrl;
+      finalUrl = '$cleanBase/resumes/export/$id';
+    }
+
+    final token = await _apiClient.authStorage.getAccessToken();
+    final queryParams = <String, dynamic>{};
+    if (token != null && token.isNotEmpty && !finalUrl.contains('token=')) {
+      queryParams['token'] = token;
     }
 
     final response = await _apiClient.rawDio.get<List<int>>(
-      resolvedPath,
+      finalUrl,
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
       options: Options(
         responseType: ResponseType.bytes,
-        headers: {'Accept': 'application/pdf'},
+        headers: {
+          'Accept': 'application/pdf',
+          if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+        },
       ),
     );
 
-    if (response.data == null) {
+    if (response.data == null || response.data!.isEmpty) {
       throw Exception('Empty PDF response received from server.');
     }
     return response.data!;
