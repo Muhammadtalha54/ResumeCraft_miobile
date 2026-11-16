@@ -94,4 +94,31 @@ class ResumeRepositoryImpl implements ResumeRepository {
     }
     return [];
   }
+
+  @override
+  Future<List<int>> exportResumePdfBytes(String resumeIdOrExportPath) async {
+    String resolvedPath;
+    if (resumeIdOrExportPath.startsWith('http://') || resumeIdOrExportPath.startsWith('https://')) {
+      resolvedPath = resumeIdOrExportPath;
+    } else if (resumeIdOrExportPath.startsWith('/api/')) {
+      resolvedPath = resumeIdOrExportPath.substring(4); // Dio baseUrl already includes /api
+    } else if (resumeIdOrExportPath.startsWith('/')) {
+      resolvedPath = resumeIdOrExportPath;
+    } else {
+      resolvedPath = ApiEndpoints.resumeExport(resumeIdOrExportPath);
+    }
+
+    final response = await _apiClient.rawDio.get<List<int>>(
+      resolvedPath,
+      options: Options(
+        responseType: ResponseType.bytes,
+        headers: {'Accept': 'application/pdf'},
+      ),
+    );
+
+    if (response.data == null) {
+      throw Exception('Empty PDF response received from server.');
+    }
+    return response.data!;
+  }
 }

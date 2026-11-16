@@ -25,4 +25,6 @@ abstract class ResumeRepository {
   });
 
   Future<List<Map<String, dynamic>>> getTemplates();
+
+  Future<List<int>> exportResumePdfBytes(String resumeIdOrExportPath);
 }

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Centralized API Endpoints Contract matching ResumeCraft backend exactly.
@@ -6,19 +5,18 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   /// API Base URL:
-  /// 1. Reads API_BASE_URL from .env if defined
-  /// 2. Fallback: 10.0.2.2 for Android Emulator (maps to host localhost:5000)
+  /// 1. Reads API_BASE_URL from .env if defined and initialized
+  /// 2. Fallback: 127.0.0.1:5000 for Android (works directly with adb reverse)
   /// 3. Fallback: localhost:5000 for iOS Simulator, Desktop, or Web
   static String get baseUrl {
-    final envUrl = dotenv.env['API_BASE_URL'];
-    if (envUrl != null && envUrl.trim().isNotEmpty) {
-      return envUrl.trim();
+    if (dotenv.isInitialized) {
+      final envUrl = dotenv.env['API_BASE_URL'];
+      if (envUrl != null && envUrl.trim().isNotEmpty) {
+        return envUrl.trim();
+      }
     }
 
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:5000/api';
-    }
-    return 'http://localhost:5000/api';
+    return 'http://192.168.100.43:5000/api';
   }
 
   // Auth

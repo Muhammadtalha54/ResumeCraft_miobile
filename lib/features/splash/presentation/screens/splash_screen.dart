@@ -51,24 +51,33 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with SingleTickerPr
   }
 
   Future<void> _bootstrap() async {
-    // Parallelize token check and preferences check
-    final prefs = ref.read(preferencesStorageProvider);
-    final isDoneOnboarding = await prefs.isOnboardingCompleted();
-    await ref.read(authNotifierProvider.notifier).checkAuth();
+    try {
+      final prefs = ref.read(preferencesStorageProvider);
+      final isDoneOnboarding = await prefs.isOnboardingCompleted();
+      try {
+        await ref.read(authNotifierProvider.notifier).checkAuth();
+      } catch (e) {
+        debugPrint("Auth check error during bootstrap: $e");
+      }
 
-    // Subtle delay to allow brand animation to gracefully complete
-    await Future.delayed(const Duration(milliseconds: 1100));
+      await Future.delayed(const Duration(milliseconds: 1100));
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final authState = ref.read(authNotifierProvider);
+      final authState = ref.read(authNotifierProvider);
 
-    if (!isDoneOnboarding) {
-      AppNavigation.replace(context, AppRoutes.onboarding);
-    } else if (authState.isAuthenticated) {
-      AppNavigation.replace(context, AppRoutes.home);
-    } else {
-      AppNavigation.replace(context, AppRoutes.login);
+      if (!isDoneOnboarding) {
+        AppNavigation.replace(context, AppRoutes.onboarding);
+      } else if (authState.isAuthenticated) {
+        AppNavigation.replace(context, AppRoutes.home);
+      } else {
+        AppNavigation.replace(context, AppRoutes.login);
+      }
+    } catch (e) {
+      debugPrint("Bootstrap error: $e");
+      if (mounted) {
+        AppNavigation.replace(context, AppRoutes.login);
+      }
     }
   }
 

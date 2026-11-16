@@ -25,6 +25,7 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
   final _queryController = TextEditingController(text: 'Software Engineer');
   final _locationController = TextEditingController();
   String _selectedJobType = 'ALL';
+  String _selectedDateFilter = 'all';
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
           query: _queryController.text,
           location: _locationController.text,
           jobType: _selectedJobType,
+          dateFilter: _selectedDateFilter,
         );
   }
 
@@ -194,6 +196,37 @@ class _JobSearchScreenState extends ConsumerState<JobSearchScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  SizedBox(height: context.screenHeight * 0.01),
+
+                  // Date Posted Filter Row
+                  Container(
+                    height: context.screenHeight * 0.045,
+                    padding: EdgeInsets.symmetric(horizontal: context.screenWidth * 0.025),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondarySurface,
+                      borderRadius: BorderRadius.circular(context.screenWidth * 0.025),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: DropdownButton<String>(
+                      value: _selectedDateFilter,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      icon: Icon(Icons.schedule_rounded, size: context.screenWidth * 0.04, color: AppColors.primary),
+                      style: AppTextStyles.metadata.copyWith(color: AppColors.mainText, fontWeight: FontWeight.w600),
+                      items: const [
+                        DropdownMenuItem(value: 'all', child: Text('Date Posted: Any Time')),
+                        DropdownMenuItem(value: '24h', child: Text('Date Posted: Past 24 Hours')),
+                        DropdownMenuItem(value: 'week', child: Text('Date Posted: Past Week')),
+                        DropdownMenuItem(value: 'month', child: Text('Date Posted: Past Month')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _selectedDateFilter = val);
+                          _triggerSearch();
+                        }
+                      },
+                    ),
                   ),
                 ],
               ),

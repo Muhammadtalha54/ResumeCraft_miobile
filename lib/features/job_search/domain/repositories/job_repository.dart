@@ -5,6 +5,7 @@ abstract class JobRepository {
     required String query,
     String? location,
     String? jobType,
+    String? dateFilter,
   });
 
   Future<void> trackApplication({

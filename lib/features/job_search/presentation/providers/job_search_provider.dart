@@ -16,6 +16,7 @@ class JobSearchState {
   final String lastQuery;
   final String lastLocation;
   final String selectedJobType;
+  final String selectedDateFilter;
 
   const JobSearchState({
     this.isLoading = false,
@@ -24,6 +25,7 @@ class JobSearchState {
     this.lastQuery = '',
     this.lastLocation = '',
     this.selectedJobType = 'ALL',
+    this.selectedDateFilter = 'all',
   });
 
   JobSearchState copyWith({
@@ -33,6 +35,7 @@ class JobSearchState {
     String? lastQuery,
     String? lastLocation,
     String? selectedJobType,
+    String? selectedDateFilter,
   }) {
     return JobSearchState(
       isLoading: isLoading ?? this.isLoading,
@@ -41,6 +44,7 @@ class JobSearchState {
       lastQuery: lastQuery ?? this.lastQuery,
       lastLocation: lastLocation ?? this.lastLocation,
       selectedJobType: selectedJobType ?? this.selectedJobType,
+      selectedDateFilter: selectedDateFilter ?? this.selectedDateFilter,
     );
   }
 }
@@ -54,8 +58,11 @@ class JobSearchNotifier extends StateNotifier<JobSearchState> {
     required String query,
     String? location,
     String? jobType,
+    String? dateFilter,
   }) async {
     if (query.trim().isEmpty) return;
+
+    final resolvedDate = dateFilter ?? state.selectedDateFilter;
 
     state = state.copyWith(
       isLoading: true,
@@ -63,6 +70,7 @@ class JobSearchNotifier extends StateNotifier<JobSearchState> {
       lastQuery: query,
       lastLocation: location ?? '',
       selectedJobType: jobType ?? 'ALL',
+      selectedDateFilter: resolvedDate,
     );
 
     try {
@@ -70,6 +78,7 @@ class JobSearchNotifier extends StateNotifier<JobSearchState> {
         query: query,
         location: location,
         jobType: jobType == 'ALL' ? null : jobType,
+        dateFilter: resolvedDate == 'all' ? null : resolvedDate,
       );
 
       state = state.copyWith(

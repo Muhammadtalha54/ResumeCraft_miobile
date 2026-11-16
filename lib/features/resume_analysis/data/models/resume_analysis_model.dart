@@ -19,26 +19,34 @@ class ResumeAnalysisModel extends ResumeAnalysisEntity {
         ? json['scoreBreakdown'] as Map<String, dynamic>
         : <String, dynamic>{};
 
+    int toInt(dynamic val, int defaultVal) {
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? defaultVal;
+      return defaultVal;
+    }
+
+    List<String> toList(dynamic val) {
+      if (val is List) return val.map((e) => e.toString()).toList();
+      return [];
+    }
+
     return ResumeAnalysisModel(
       resumeId: json['resumeId']?.toString() ??
           json['id']?.toString() ??
           (json['resume'] is Map ? json['resume']['id']?.toString() : null) ??
           '',
-      overallScore: json['atsScore'] is int ? json['atsScore'] : 70,
-      formattingScore: breakdown['formatting'] is int ? breakdown['formatting'] : 75,
-      contentScore: breakdown['content'] is int ? breakdown['content'] : 70,
-      skillsScore: breakdown['skills'] is int ? breakdown['skills'] : 70,
-      impactScore: breakdown['impact'] is int ? breakdown['impact'] : 70,
-      strengths: json['strengths'] is List
-          ? (json['strengths'] as List).map((e) => e.toString()).toList()
-          : [],
-      weaknesses: json['weaknesses'] is List
-          ? (json['weaknesses'] as List).map((e) => e.toString()).toList()
-          : [],
-      recommendations: json['recommendations'] is List
-          ? (json['recommendations'] as List).map((e) => e.toString()).toList()
-          : [],
-      remainingAtsCredits: json['remainingAtsCredits'] is int ? json['remainingAtsCredits'] : 0,
+      overallScore: toInt(json['atsScore'] ?? json['overallScore'] ?? json['overallAtsScore'], 70),
+      formattingScore: toInt(breakdown['formatting'] ?? breakdown['structure'], 75),
+      contentScore: toInt(breakdown['content'] ?? breakdown['readability'], 70),
+      skillsScore: toInt(breakdown['skills'] ?? breakdown['keywords'], 70),
+      impactScore: toInt(breakdown['impact'], 70),
+      strengths: toList(json['strengths'] ?? json['improvementSummary']),
+      weaknesses: toList(json['weaknesses'] ?? json['missingSections']),
+      recommendations: toList(json['recommendations'] ?? json['actionVerbSuggestions'] ?? json['improvementSummary']),
+      remainingAtsCredits: toInt(
+        json['remainingAtsCredits'] ?? (json['remainingCredits'] is Map ? json['remainingCredits']['atsCredits'] : null),
+        0,
+      ),
     );
   }
 }

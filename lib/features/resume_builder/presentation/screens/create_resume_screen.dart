@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/lang.dart';
 import '../../../../core/extensions/size_extensions.dart';
-import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -411,13 +410,20 @@ class _CreateResumeScreenState extends ConsumerState<CreateResumeScreen> {
   Future<void> _handlePreviewPdf() async {
     final id = _tailoredResult?['resumeId']?.toString() ??
         _tailoredResult?['resume']?['id']?.toString();
-    if (id == null) return;
+    if (id == null) {
+      AppSnackbar.warning(context, 'Resume ID not found for preview.');
+      return;
+    }
 
-    final url = '${ApiEndpoints.baseUrl}${ApiEndpoints.resumeExport(id)}';
-    
+    final title = _selectedMode == 1
+        ? (_scratchJobTitleController.text.trim().isNotEmpty
+            ? '${_scratchJobTitleController.text.trim()} Resume'
+            : 'Generated Resume')
+        : (_selectedTailorResumeTitle ?? 'Tailored Resume');
+
     AppNavigation.push(context, AppRoutes.pdfPreview, extra: {
-      'pdfUrl': url,
-      'resumeTitle': '${_scratchJobTitleController.text.trim()} Resume',
+      'pdfUrl': id,
+      'resumeTitle': title,
     });
   }
 
@@ -1066,111 +1072,120 @@ class _CreateResumeScreenState extends ConsumerState<CreateResumeScreen> {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.screenWidth * 0.05),
-      child: Container(
-        padding: EdgeInsets.all(context.screenWidth * 0.05),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(context.screenWidth * 0.04),
-          border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.success.withValues(alpha: 0.08),
-              blurRadius: 16,
-              offset: Offset(0, context.screenHeight * 0.006),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(context.screenWidth * 0.025),
-                  decoration: BoxDecoration(
-                    color: AppColors.successBackground,
-                    shape: BoxShape.circle,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(context.screenWidth * 0.04),
+        onTap: _handlePreviewPdf,
+        child: Container(
+          padding: EdgeInsets.all(context.screenWidth * 0.05),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(context.screenWidth * 0.04),
+            border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.success.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: Offset(0, context.screenHeight * 0.006),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(context.screenWidth * 0.025),
+                    decoration: BoxDecoration(
+                      color: AppColors.successBackground,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.verified_rounded,
+                      color: AppColors.success,
+                      size: context.screenWidth * 0.06,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.verified_rounded,
-                    color: AppColors.success,
-                    size: context.screenWidth * 0.06,
+                  SizedBox(width: context.screenWidth * 0.03),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ATS Resume Ready ($atsScore/100)',
+                          style: AppTextStyles.cardHeading.copyWith(
+                            color: AppColors.mainText,
+                            fontSize: context.screenWidth * 0.042,
+                          ),
+                        ),
+                        Text(
+                          'Optimized with STAR framework & keywords (Tap to view)',
+                          style: AppTextStyles.metadata,
+                        ),
+                      ],
+                    ),
                   ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: AppColors.primary,
+                    size: context.screenWidth * 0.04,
+                  ),
+                ],
+              ),
+              SizedBox(height: context.screenHeight * 0.015),
+              Text(
+                improvementText,
+                style: AppTextStyles.supporting.copyWith(
+                  color: AppColors.mainText,
+                  fontSize: context.screenWidth * 0.033,
+                  height: 1.4,
                 ),
-                SizedBox(width: context.screenWidth * 0.03),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'ATS Resume Ready ($atsScore/100)',
-                        style: AppTextStyles.cardHeading.copyWith(
-                          color: AppColors.mainText,
-                          fontSize: context.screenWidth * 0.042,
+              ),
+              SizedBox(height: context.screenHeight * 0.02),
+
+              // Action Buttons: Edit Content & Preview/Download PDF
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: EdgeInsets.symmetric(vertical: context.screenHeight * 0.016),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(context.screenWidth * 0.03),
                         ),
                       ),
-                      Text(
-                        'Optimized with STAR framework & keywords',
-                        style: AppTextStyles.metadata,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: context.screenHeight * 0.015),
-            Text(
-              improvementText,
-              style: AppTextStyles.supporting.copyWith(
-                color: AppColors.mainText,
-                fontSize: context.screenWidth * 0.033,
-                height: 1.4,
-              ),
-            ),
-            SizedBox(height: context.screenHeight * 0.02),
-
-            // Action Buttons: Edit Content & Download PDF
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: EdgeInsets.symmetric(vertical: context.screenHeight * 0.016),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(context.screenWidth * 0.03),
-                      ),
-                    ),
-                    onPressed: _openContentEditor,
-                    icon: Icon(
-                      Icons.edit_note_rounded,
-                      color: AppColors.primary,
-                      size: context.screenWidth * 0.05,
-                    ),
-                    label: Text(
-                      Lang.editResumeContent,
-                      style: AppTextStyles.buttonText.copyWith(
+                      onPressed: _openContentEditor,
+                      icon: Icon(
+                        Icons.edit_note_rounded,
                         color: AppColors.primary,
-                        fontSize: context.screenWidth * 0.036,
+                        size: context.screenWidth * 0.05,
+                      ),
+                      label: Text(
+                        Lang.editResumeContent,
+                        style: AppTextStyles.buttonText.copyWith(
+                          color: AppColors.primary,
+                          fontSize: context.screenWidth * 0.036,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                SizedBox(width: context.screenWidth * 0.03),
-                Expanded(
-                  child: CustomButton(
-                    text: Lang.exportPdfButton,
-                    onPressed: _handlePreviewPdf,
-                    icon: Icon(
-                      Icons.download_rounded,
-                      color: Colors.white,
-                      size: context.screenWidth * 0.045,
+                  SizedBox(width: context.screenWidth * 0.03),
+                  Expanded(
+                    child: CustomButton(
+                      text: 'Preview & Download',
+                      onPressed: _handlePreviewPdf,
+                      icon: Icon(
+                        Icons.picture_as_pdf_rounded,
+                        color: Colors.white,
+                        size: context.screenWidth * 0.045,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

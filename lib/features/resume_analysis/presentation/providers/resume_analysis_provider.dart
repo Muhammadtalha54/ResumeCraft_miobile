@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/resume_analysis_entity.dart';
 import '../../domain/repositories/resume_repository.dart';
@@ -62,26 +63,43 @@ class ResumeAnalysisNotifier extends StateNotifier<ResumeAnalysisState> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'docx'],
+        allowedExtensions: ['pdf', 'docx', 'doc'],
+        withData: true,
       );
 
-      if (result != null && result.files.single.path != null) {
-        final path = result.files.single.path!;
-        final file = File(path);
-        final sizeBytes = await file.length();
-
-        // 10 MB maximum limit
-        if (sizeBytes > 10 * 1024 * 1024) {
-          state = state.copyWith(errorMessage: 'Selected file exceeds maximum 10 MB limit.');
-          return;
-        }
-
-        state = state.copyWith(
-          selectedFile: file,
-          selectedFileName: result.files.single.name,
-          errorMessage: null,
-        );
+      if (result == null || result.files.isEmpty) {
+        return; // User cancelled
       }
+
+      final picked = result.files.first;
+      File file;
+
+      if (picked.path != null && picked.path!.isNotEmpty && File(picked.path!).existsSync()) {
+        file = File(picked.path!);
+      } else if (picked.bytes != null) {
+        final tempDir = await getTemporaryDirectory();
+        final sanitized = picked.name.replaceAll(RegExp(r'[^\w\.-]'), '_');
+        final tempFile = File('${tempDir.path}/$sanitized');
+        await tempFile.writeAsBytes(picked.bytes!, flush: true);
+        file = tempFile;
+      } else {
+        state = state.copyWith(errorMessage: 'Unable to access the chosen file content.');
+        return;
+      }
+
+      final sizeBytes = await file.length();
+
+      // 10 MB maximum limit
+      if (sizeBytes > 10 * 1024 * 1024) {
+        state = state.copyWith(errorMessage: 'Selected file exceeds maximum 10 MB limit.');
+        return;
+      }
+
+      state = state.copyWith(
+        selectedFile: file,
+        selectedFileName: picked.name,
+        errorMessage: null,
+      );
     } catch (e) {
       state = state.copyWith(errorMessage: 'Failed to access file picker: $e');
     }

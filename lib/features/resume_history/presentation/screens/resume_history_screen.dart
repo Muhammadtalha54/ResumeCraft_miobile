@@ -110,15 +110,18 @@ class _ResumeHistoryScreenState extends ConsumerState<ResumeHistoryScreen> {
 
                         final isHighScore = score >= 75;
 
-                        return Container(
-                          padding: EdgeInsets.all(context.screenWidth * 0.04),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(context.screenWidth * 0.035),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            children: [
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(context.screenWidth * 0.035),
+                          onTap: () => _handlePreviewPdf(id, title),
+                          child: Container(
+                            padding: EdgeInsets.all(context.screenWidth * 0.04),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(context.screenWidth * 0.035),
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Row(
+                              children: [
                               // Circular Score indicator
                               Container(
                                 width: context.screenWidth * 0.12,
@@ -186,12 +189,13 @@ class _ResumeHistoryScreenState extends ConsumerState<ResumeHistoryScreen> {
                                   size: context.screenWidth * 0.055,
                                 ),
                                 tooltip: 'Preview PDF',
-onPressed: () => _handlePreviewPdf(id, title),
+                                onPressed: () => _handlePreviewPdf(id, title),
                               ),
                             ],
                           ),
-                        );
-                      },
+                        ),
+                      );
+                    },
                     ),
         ),
       ),

@@ -71,6 +71,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(authNotifierProvider).user;
     final resumeState = ref.watch(resumeAnalysisProvider);
 
+    ref.listen<ResumeAnalysisState>(resumeAnalysisProvider, (prev, next) {
+      if (next.errorMessage != null && next.errorMessage != prev?.errorMessage) {
+        AppSnackbar.error(context, next.errorMessage!);
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.mainBackground,
       appBar: CustomAppBar(
@@ -322,61 +328,77 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       final title = item['title']?.toString() ?? 'Software Resume';
                       final strategy = item['targetMarketStrategy']?.toString() ?? 'FAANG';
 
-                      return Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: context.screenWidth * 0.04,
-                          vertical: context.screenHeight * 0.018,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(context.screenWidth * 0.035),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: context.screenWidth * 0.11,
-                              height: context.screenWidth * 0.11,
-                              decoration: BoxDecoration(
-                                color: (score >= 75 ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '$score%',
-                                  style: AppTextStyles.bodyMedium.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: score >= 75 ? AppColors.success : AppColors.warning,
-                                    fontSize: 13,
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(context.screenWidth * 0.035),
+                        onTap: () {
+                          final id = item['id']?.toString() ?? '';
+                          if (id.isNotEmpty) {
+                            AppNavigation.push(
+                              context,
+                              AppRoutes.pdfPreview,
+                              extra: {
+                                'pdfUrl': id,
+                                'resumeTitle': title,
+                              },
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: context.screenWidth * 0.04,
+                            vertical: context.screenHeight * 0.018,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(context.screenWidth * 0.035),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: context.screenWidth * 0.11,
+                                height: context.screenWidth * 0.11,
+                                decoration: BoxDecoration(
+                                  color: (score >= 75 ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    '$score%',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: score >= 75 ? AppColors.success : AppColors.warning,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(width: context.screenWidth * 0.035),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  SizedBox(height: context.screenHeight * 0.003),
-                                  Text(
-                                    'Strategy: $strategy',
-                                    style: AppTextStyles.metadata,
-                                  ),
-                                ],
+                              SizedBox(width: context.screenWidth * 0.035),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      title,
+                                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    SizedBox(height: context.screenHeight * 0.003),
+                                    Text(
+                                      'Strategy: $strategy',
+                                      style: AppTextStyles.metadata,
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              color: AppColors.mutedText,
-                              size: context.screenWidth * 0.035,
-                            ),
-                          ],
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                color: AppColors.mutedText,
+                                size: context.screenWidth * 0.035,
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },

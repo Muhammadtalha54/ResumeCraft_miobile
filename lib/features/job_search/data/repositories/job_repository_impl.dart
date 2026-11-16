@@ -14,6 +14,7 @@ class JobRepositoryImpl implements JobRepository {
     required String query,
     String? location,
     String? jobType,
+    String? dateFilter,
   }) async {
     final response = await _apiClient.get(
       ApiEndpoints.jobsSearch,
@@ -21,6 +22,7 @@ class JobRepositoryImpl implements JobRepository {
         'q': query.trim(),
         if (location != null && location.trim().isNotEmpty) 'location': location.trim(),
         if (jobType != null && jobType.trim().isNotEmpty) 'jobType': jobType.trim(),
+        if (dateFilter != null && dateFilter.trim().isNotEmpty) 'dateFilter': dateFilter.trim(),
       },
     );
 
