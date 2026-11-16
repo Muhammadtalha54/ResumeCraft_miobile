@@ -30,6 +30,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(resumeAnalysisProvider.notifier).fetchHistory();
+      ref.read(authNotifierProvider.notifier).refreshProfile();
     });
   }
 
@@ -96,7 +97,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () => ref.read(resumeAnalysisProvider.notifier).fetchHistory(),
+          onRefresh: () async {
+            await Future.wait([
+              ref.read(resumeAnalysisProvider.notifier).fetchHistory(),
+              ref.read(authNotifierProvider.notifier).refreshProfile(),
+            ]);
+          },
           color: AppColors.primary,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -120,7 +126,67 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   'Optimize Your Resume For ATS',
                   style: AppTextStyles.screenHeading.copyWith(fontSize: 22),
                 ),
-                SizedBox(height: context.screenHeight * 0.025),
+                SizedBox(height: context.screenHeight * 0.015),
+
+                // Live Credits Badge Row
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.screenWidth * 0.035,
+                        vertical: context.screenHeight * 0.008,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(context.screenWidth * 0.05),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.edit_document, size: 14, color: AppColors.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Resume Credits: ${user?.resumeCredits ?? 0}',
+                            style: AppTextStyles.metadata.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: context.screenWidth * 0.025),
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.screenWidth * 0.035,
+                        vertical: context.screenHeight * 0.008,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.information.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(context.screenWidth * 0.05),
+                        border: Border.all(color: AppColors.information.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.auto_awesome_rounded, size: 14, color: AppColors.information),
+                          const SizedBox(width: 6),
+                          Text(
+                            'ATS Credits: ${user?.atsCredits ?? 0}',
+                            style: AppTextStyles.metadata.copyWith(
+                              color: AppColors.information,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: context.screenHeight * 0.02),
 
                 // Upload & Target Details Card
                 Container(

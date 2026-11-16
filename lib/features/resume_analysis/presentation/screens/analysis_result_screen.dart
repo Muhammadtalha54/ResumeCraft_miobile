@@ -85,10 +85,12 @@ class _AnalysisResultScreenState extends ConsumerState<AnalysisResultScreen> {
           (pdfPath.startsWith('/api') ? pdfPath : '/api$pdfPath');
 
       // Update remaining credits in AuthNotifier
-      if (result['remainingCredits'] is Map && result['remainingCredits']['resumeCredits'] != null) {
+      if (result['remainingCredits'] is Map) {
+        final credits = result['remainingCredits'] as Map<String, dynamic>;
         ref.read(authNotifierProvider.notifier).updateCredits(
-              resumeCredits: (result['remainingCredits']['resumeCredits'] as num).toInt(),
-            );
+          resumeCredits: (credits['resumeCredits'] as num?)?.toInt(),
+          atsCredits: (credits['atsCredits'] as num?)?.toInt(),
+        );
       }
 
       // Refresh recent resumes in history

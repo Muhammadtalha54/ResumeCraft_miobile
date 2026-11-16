@@ -98,18 +98,20 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<UserEntity?> getCurrentUser() async {
+  Future<UserEntity?> getCurrentUser({bool forceRefresh = false}) async {
     final token = await _authStorage.getAccessToken();
     if (token == null || token.isEmpty) return null;
 
-    try {
-      // First attempt to restore cached user session for instant startup
+    if (!forceRefresh) {
       final cachedJson = await _authStorage.getUserJson();
       if (cachedJson != null) {
-        return UserModel.fromJson(jsonDecode(cachedJson));
+        try {
+          return UserModel.fromJson(jsonDecode(cachedJson));
+        } catch (_) {}
       }
+    }
 
-      // If no cached user, query live profile
+    try {
       final response = await _apiClient.get(ApiEndpoints.profile);
       if (response != null && response['user'] != null) {
         final user = UserModel.fromJson(response['user']);
@@ -120,13 +122,37 @@ class AuthRepositoryImpl implements AuthRepository {
         return user;
       }
     } catch (_) {
-      // On network error, still return cached user if present
       final cachedJson = await _authStorage.getUserJson();
       if (cachedJson != null) {
-        return UserModel.fromJson(jsonDecode(cachedJson));
+        try {
+          return UserModel.fromJson(jsonDecode(cachedJson));
+        } catch (_) {}
       }
     }
     return null;
+  }
+
+  @override
+  Future<void> saveCachedUser(UserEntity user) async {
+    try {
+      final model = user is UserModel
+          ? user
+          : UserModel(
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              plan: user.plan,
+              status: user.status,
+              resumeCredits: user.resumeCredits,
+              atsCredits: user.atsCredits,
+              profileImage: user.profileImage,
+            );
+      await _authStorage.saveUserSession(
+        userId: user.id,
+        userJson: jsonEncode(model.toJson()),
+      );
+    } catch (_) {}
   }
 
   @override

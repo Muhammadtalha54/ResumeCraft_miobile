@@ -11,10 +11,23 @@ import '../../../../core/widgets/custom_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/upgrade_plan_sheet.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(authNotifierProvider.notifier).refreshProfile();
+    });
+  }
+
+  void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -48,7 +61,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final user = ref.watch(authNotifierProvider).user;
 
     return Scaffold(
@@ -57,7 +70,11 @@ class ProfileScreen extends ConsumerWidget {
         title: Lang.profileTitle,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: RefreshIndicator(
+          onRefresh: () => ref.read(authNotifierProvider.notifier).refreshProfile(),
+          color: AppColors.primary,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.symmetric(
             horizontal: context.screenWidth * 0.05,
             vertical: context.screenHeight * 0.02,
@@ -283,7 +300,7 @@ class ProfileScreen extends ConsumerWidget {
               CustomButton(
                 text: Lang.drawerLogout,
                 type: ButtonType.danger,
-                onPressed: () => _showLogoutDialog(context, ref),
+                onPressed: () => _showLogoutDialog(context),
                 icon: Icon(
                   Icons.logout_rounded,
                   color: Colors.white,
@@ -295,8 +312,9 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _CreditBox extends StatelessWidget {

@@ -82,12 +82,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await _repository.getCurrentUser();
       if (user != null) {
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
+        // Silently fetch fresh profile and credits in background
+        _repository.getCurrentUser(forceRefresh: true).then((fresh) {
+          if (fresh != null && mounted) {
+            state = state.copyWith(user: fresh);
+          }
+        });
       } else {
         state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
       }
     } catch (_) {
       state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
     }
+  }
+
+  Future<void> refreshProfile() async {
+    try {
+      final fresh = await _repository.getCurrentUser(forceRefresh: true);
+      if (fresh != null) {
+        state = state.copyWith(status: AuthStatus.authenticated, user: fresh);
+      }
+    } catch (_) {}
   }
 
   Future<AuthActionResult> login({required String email, required String password}) async {
@@ -181,12 +196,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void updateCredits({int? atsCredits, int? resumeCredits}) {
     if (state.user != null) {
-      state = state.copyWith(
-        user: state.user!.copyWith(
-          atsCredits: atsCredits,
-          resumeCredits: resumeCredits,
-        ),
+      final updated = state.user!.copyWith(
+        atsCredits: atsCredits,
+        resumeCredits: resumeCredits,
       );
+      state = state.copyWith(user: updated);
+      _repository.saveCachedUser(updated);
     }
   }
 }
